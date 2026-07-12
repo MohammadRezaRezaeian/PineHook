@@ -1,0 +1,18 @@
+[
+  {
+    "user_id": "user_001",
+    "mt5_login": 10001,
+    "mt5_password": "PassWord1!",
+    "mt5_server": "BrokerA-Live",
+    "mt5_path": "C:\\Program Files\\MetaTrader 5 - Terminal 1\\terminal64.exe",
+    "subscribed_strategies": ["EMA_Crossover", "MACD_Bounce"]
+  },
+  {
+    "user_id": "user_002",
+    "mt5_login": 20002,
+    "mt5_password": "PassWord2!",
+    "mt5_server": "BrokerB-Live",
+    "mt5_path": "C:\\Program Files\\MetaTrader 5 - Terminal 2\\terminal64.exe",
+    "subscribed_strategies": ["EMA_Crossover"]
+  }
+]
