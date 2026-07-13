@@ -1,17 +1,13 @@
 # PineHook: TradingView to MetaTrader 5 Bridge
 
-PineHook is a high-performance, modular Python application built with **FastAPI** that acts as a bridge between **TradingView Webhooks** and **MetaTrader 5 (MT5)**. It allows you to execute fully automated trading strategies sent from Pine Script directly into one or multiple MT5 accounts simultaneously.
+PineHook is a high-performance, modular Python application built with **FastAPI** that acts as a secure bridge between **TradingView Webhooks** and **MetaTrader 5 (MT5)**. It allows you to execute fully automated trading strategies sent from Pine Script directly into one or multiple MT5 accounts simultaneously.
 
----
-
-## ⚙️ How It Works
-
-TradingView cannot send trades directly to MT5. PineHook serves as the middleman:
-1. **The Signal:** A Pine Script strategy triggers an alert on TradingView.
-2. **The Webhook:** TradingView sends an HTTP POST request containing a formatted JSON payload to the PineHook server.
-3. **The Router:** FastAPI receives the payload and validates the security passphrase.
-4. **The Logic:** The Trade Service identifies the strategy and finds the subscribed MT5 accounts.
-5. **The Execution:** The MT5 Engine connects to the specific MetaTrader 5 terminal path for each user and executes the MQL5 `OrderSend` request instantly.
+## ✨ Features
+* **Market Execution:** Instant Buy/Sell market orders.
+* **Pending Orders:** Support for Buy Limit, Sell Limit, Buy Stop, and Sell Stop.
+* **Trade Management:** Automatically close open positions or cancel pending orders directly from TradingView signals.
+* **Multi-Account Support:** Route different strategies to different MT5 terminals.
+* **Secure:** Passphrase protection ensures only your TradingView alerts can trigger trades.
 
 ---
 
@@ -25,36 +21,55 @@ TradingView cannot send trades directly to MT5. PineHook serves as the middleman
 
 ---
 
-## 📊 Phase 1: TradingView Setup
+## 📊 Phase 1: TradingView Setup (Pine Script & Alerts)
 
-To trigger trades, your Pine Script must construct a JSON payload and send it to your server.
+To trigger trades, your Pine Script must construct a JSON payload and fire it using the `alert()` function. 
 
-### 1. The Pine Script & JSON Payload
-Add this logic to your TradingView Pine Script to fire the Universal MQL5 JSON payload:
+### 1. The Pine Script Template
+Add this logic to your TradingView Pine Script. Notice how we use a single JSON template but change the `action` and `type` fields based on what we want to do.
 
 ```pine
 //@version=5
-indicator("PineHook Webhook Signal", overlay=true)
+indicator("PineHook Advanced Signals", overlay=true)
 
-// Signal Logic Example
-buySignal = ta.crossover(ta.ema(close, 9), ta.ema(close, 21))
+var string WEBHOOK_TOKEN = "MySecretToken123"
+var string STRAT_ID = "EMA_Crossover"
+var int MAGIC = 777888
 
-// JSON Template
+// --- The JSON Template ---
 var string jsonTemplate = '{"passphrase": "{0}", "strategy_id": "{1}", "action": "{2}", "symbol": "{3}", "type": "{4}", "volume": {5}, "price": {6}, "sl": {7}, "tp": {8}, "deviation": {9}, "magic_number": {10}, "comment": "{11}"}'
 
-if buySignal
-    string alertJson = str.format(jsonTemplate, 
-      "MySecretToken123", // passphrase
-      "EMA_Crossover",    // strategy_id
-      "deal",             // action
-      syminfo.ticker,     // symbol
-      "buy",              // type
-      0.1,                // volume (lots)
-      close,              // price
-      0.0,                // sl
-      0.0,                // tp
-      10,                 // deviation
-      777888,             // magic_number
-      "TV_Buy_Signal"     // comment
-      )
-    alert(alertJson, alert.freq_once_per_bar_close)
+// ---------------------------------------------------------
+// SCENARIO A: Market Execution (Buy/Sell)
+// ---------------------------------------------------------
+if ta.crossover(close, ta.sma(close, 50))
+    // action: "deal", type: "buy" or "sell"
+    string buyJson = str.format(jsonTemplate, WEBHOOK_TOKEN, STRAT_ID, "deal", syminfo.ticker, "buy", 0.1, close, 0.0, 0.0, 10, MAGIC, "Market Buy")
+    alert(buyJson, alert.freq_once_per_bar_close)
+
+// ---------------------------------------------------------
+// SCENARIO B: Place a Pending Order (Limit/Stop)
+// ---------------------------------------------------------
+if ta.crossunder(close, ta.sma(close, 50))
+    // action: "pending", type: "buy_limit", "sell_limit", "buy_stop", "sell_stop"
+    float limitPrice = close - (20 * syminfo.mintick * 10)
+    string pendingJson = str.format(jsonTemplate, WEBHOOK_TOKEN, STRAT_ID, "pending", syminfo.ticker, "buy_limit", 0.1, limitPrice, 0.0, 0.0, 10, MAGIC, "Limit Entry")
+    alert(pendingJson, alert.freq_once_per_bar_close)
+
+// ---------------------------------------------------------
+// SCENARIO C: Close Open Positions
+// ---------------------------------------------------------
+bool exitSignal = ta.crossunder(ta.ema(close, 9), ta.ema(close, 21))
+if exitSignal
+    // action: "close". MT5 will find positions matching the symbol and magic number.
+    string closeJson = str.format(jsonTemplate, WEBHOOK_TOKEN, STRAT_ID, "close", syminfo.ticker, "all", 0.0, 0.0, 0.0, 0.0, 10, MAGIC, "Exit Signal")
+    alert(closeJson, alert.freq_once_per_bar_close)
+
+// ---------------------------------------------------------
+// SCENARIO D: Cancel Pending Orders
+// ---------------------------------------------------------
+bool setupInvalidated = close < ta.sma(close, 200)
+if setupInvalidated
+    // action: "cancel". MT5 will remove unfilled orders matching the symbol and magic number.
+    string cancelJson = str.format(jsonTemplate, WEBHOOK_TOKEN, STRAT_ID, "cancel", syminfo.ticker, "all", 0.0, 0.0, 0.0, 0.0, 10, MAGIC, "Cancel Pending")
+    alert(cancelJson, alert.freq_once_per_bar_close)

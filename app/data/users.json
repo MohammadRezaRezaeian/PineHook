@@ -1,18 +1,10 @@
 [
   {
-    "user_id": "user_001",
-    "mt5_login": 10001,
-    "mt5_password": "PassWord1!",
-    "mt5_server": "BrokerA-Live",
-    "mt5_path": "C:\\Program Files\\MetaTrader 5 - Terminal 1\\terminal64.exe",
-    "subscribed_strategies": ["EMA_Crossover", "MACD_Bounce"]
-  },
-  {
-    "user_id": "user_002",
-    "mt5_login": 20002,
-    "mt5_password": "PassWord2!",
-    "mt5_server": "BrokerB-Live",
-    "mt5_path": "C:\\Program Files\\MetaTrader 5 - Terminal 2\\terminal64.exe",
-    "subscribed_strategies": ["EMA_Crossover"]
+    "user_id": "192.168.88.187",
+    "mt5_login": 1053223,
+    "mt5_password": "H2Ea8I#n!",
+    "mt5_server": "MonetaMarkets - Demo",
+    "mt5_path": "C:\\Program Files\\Moneta Markets MT5 Terminal\\4\\terminal64.exe",
+    "subscribed_strategies": ["TF_1", "TF2"]
   }
 ]
