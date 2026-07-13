@@ -21,6 +21,24 @@ PineHook is a high-performance, modular Python application built with **FastAPI*
 
 ---
 
+## 🌐 The Webhook URL: How TradingView Connects to PineHook
+
+**Crucial Concept:** You *do not* write the API URL inside your Pine Script code. Pine Script does not have an `http.post()` function. Instead, your Pine Script generates a JSON message, and you paste your server's URL into the TradingView UI.
+
+When you run this project, FastAPI creates a specific endpoint that listens for TradingView signals. 
+
+### The Exact URL You Will Use
+Your API endpoint is always:
+`/api/v1/tv-webhook`
+
+* **If running locally with Ngrok:** `https://<your-ngrok-id>.ngrok-free.app/api/v1/tv-webhook`
+* **If hosted on a VPS/Server:** `http://<your-server-ip>:8000/api/v1/tv-webhook`
+* **If using a custom domain:** `https://api.yourdomain.com/api/v1/tv-webhook`
+
+You will paste this exact URL into the **Webhook URL** box in TradingView's Alert creation menu (detailed in Phase 1).
+
+---
+
 ## 📊 Phase 1: TradingView Setup (Pine Script & Alerts)
 
 To trigger trades, your Pine Script must construct a JSON payload and fire it using the `alert()` function. 
